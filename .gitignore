@@ -1,0 +1,34 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.cache/
+nosetests.xml
+coverage.xml
+*.covered
+*.pyo
+
+# Project-specific cache
+cache/
+data/aqi_cache.json
+data/air_quality_history.db
+scratch/
+
+# Environment
+venv/
+.env
+.venv
+env/
+test_env/
+
+# OS/IDE
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+data/*.graphml

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirRoute | Smart Pollution Navigation</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css?v=200">
+</head>
+<body class="dark-theme">
+    <div id="loading-overlay" class="hidden">
+        <div class="loader-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p id="loading-text">Initializing city graph...</p>
+        </div>
+    </div>
+    
+    <div id="app-container">
+        <!-- Sidebar -->
+        <aside id="sidebar">
+            <header>
+                <div class="logo">
+                    <i class="fas fa-wind"></i>
+                    <h1>AirRoute</h1>
+                </div>
+                <div class="subtitle" style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+                    <span style="font-size: 0.9em; opacity: 0.8;">Active City</span>
+                    <select id="city-selector" class="city-select" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 4px 8px; border-radius: 6px; font-family: inherit; cursor: pointer; outline: none;">
+                        <option value="bengaluru">Bengaluru (India)</option>
+                        <option value="amsterdam">Amsterdam (NL)</option>
+                    </select>
+                </div>
+            </header>
+
+            <section class="controls">
+                <div class="control-group">
+                    <label>Transportation Mode</label>
+                    <div class="mode-selector">
+                        <button class="mode-btn active" data-mode="car"><i class="fas fa-car"></i></button>
+                        <button class="mode-btn" data-mode="bike"><i class="fas fa-bicycle"></i></button>
+                        <button class="mode-btn" data-mode="walk"><i class="fas fa-walking"></i></button>
+                    </div>
+                </div>
+
+                <div class="route-points">
+                    <div class="point-input" id="start-point">
+                        <i class="fas fa-circle-dot origin"></i>
+                        <input type="text" placeholder="Click map for Start" readonly>
+                    </div>
+                    <div class="route-line"></div>
+                    <div class="point-input" id="end-point">
+                        <i class="fas fa-location-dot destination"></i>
+                        <input type="text" placeholder="Click map for End" readonly>
+                    </div>
+                </div>
+                
+                <button id="find-route-btn" disabled>Calculate Best Route</button>
+            </section>
+
+            <section id="results-panel" class="hidden">
+                <h3>Route Insights</h3>
+                <div class="metrics-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 8px;">
+                    <div class="metric-card" style="border: 1px solid #3b82f6;">
+                        <span class="label" style="color: #3b82f6;"><i class="fas fa-bolt"></i> Fastest</span>
+                        <div style="font-size: 0.9rem; margin-top: 4px;">Time: <strong id="res-time-fast">-- min</strong></div>
+                        <div style="font-size: 0.9rem;">AQI: <strong id="res-aqi-fast">--</strong></div>
+                    </div>
+                    <div class="metric-card highlight" style="border: 1px solid #10b981;">
+                        <span class="label" style="color: #10b981;"><i class="fas fa-leaf"></i> Cleanest</span>
+                        <div style="font-size: 0.9rem; margin-top: 4px;">Time: <strong id="res-time-clean">-- min</strong></div>
+                        <div style="font-size: 0.9rem;">AQI: <strong id="res-aqi-clean">--</strong></div>
+                    </div>
+                </div>
+                
+                <div class="recommendation-box" id="recommendation">
+                    <i class="fas fa-circle-info"></i>
+                    <p id="res-reason">Select a destination to begin.</p>
+                </div>
+            </section>
+
+            <section class="live-status">
+                <div class="status-header">
+                    <h3>City Baseline</h3>
+                    <span class="badge" id="data-source">Live</span>
+                </div>
+                <div class="aqi-ring-container">
+                    <div class="aqi-value" id="city-aqi">--</div>
+                    <div class="aqi-label">Current Index</div>
+                </div>
+                <div class="forecast">
+                    <div class="f-item"><span>+1h</span><strong id="f-1h">--</strong></div>
+                    <div class="f-item"><span>+3h</span><strong id="f-3h">--</strong></div>
+                    <div class="f-item"><span>+7d</span><strong id="f-1w" style="color: #a78bfa;">--</strong></div>
+                </div>
+            </section>
+        </aside>
+
+        <!-- Map Container -->
+        <main id="map-wrap">
+            <div id="map"></div>
+            <div class="map-overlay">
+                <div class="legend">
+                    <div class="legend-item"><span class="line fast"></span> Fastest</div>
+                    <div class="legend-item"><span class="line clean"></span> Cleanest</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/static/app.js?v=200"></script>
+</body>
+</html>
