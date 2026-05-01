@@ -101,11 +101,15 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => {
                 hideLoading(); // Never leave UI stuck on loading
                 console.warn('Failed to fetch city stats:', err);
+                
+                // If it fails on init, try again shortly or hide overlay anyway
+                setTimeout(hideLoading, 500);
             });
     }
 
     // Initial load + interval
-    updateCityStats();
+    // Slight delay on start to ensure DOM and Leaflet are fully ready
+    setTimeout(updateCityStats, 200);
     setInterval(updateCityStats, 15000);
 
     // Mode Selection

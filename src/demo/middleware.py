@@ -58,6 +58,19 @@ class DemoModeMiddleware(BaseHTTPMiddleware):
         city = query_params.get("city", "bengaluru")
         demo_force = query_params.get("demo_force", None)
         
+        # Extract coordinates for routing realism
+        coords = None
+        if path == "/route":
+            try:
+                coords = {
+                    "start_lat": float(query_params.get("start_lat", 0)),
+                    "start_lon": float(query_params.get("start_lon", 0)),
+                    "end_lat": float(query_params.get("end_lat", 0)),
+                    "end_lon": float(query_params.get("end_lon", 0)),
+                }
+            except (ValueError, TypeError):
+                pass
+        
         # Select scenario
         scenario = self.selector.select(endpoint=path, query_force=demo_force)
         
@@ -84,7 +97,8 @@ class DemoModeMiddleware(BaseHTTPMiddleware):
             scenario=scenario,
             endpoint=path,
             mode=mode,
-            city=city
+            city=city,
+            coords=coords
         )
         
         if body is None:

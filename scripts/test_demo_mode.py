@@ -23,13 +23,15 @@ for i in range(5):
     print(f"  Scenario roll #{i+1}: {s}")
 
 # 3. Mock data — Success
-print("\n--- Mock Route (Success) ---")
-r = generate_route_success("car", "bengaluru")
+print("\n--- Mock Route (Success with Coords) ---")
+coords = {"start_lat": 12.97, "start_lon": 77.59, "end_lat": 12.98, "end_lon": 77.60}
+r = generate_route_success("car", "bengaluru", coords)
 print(f"  Mode: {r['user_mode']}")
+print(f"  Path length: {len(r['route_fastest']['path'])} points")
+print(f"  Starts at: {r['route_fastest']['path'][0]}")
+print(f"  Ends at: {r['route_fastest']['path'][-1]}")
 print(f"  Fastest: {r['route_fastest']['time_min']:.1f} min, AQI={r['route_fastest']['aqi_mean']}")
-print(f"  Cleanest: {r['route_quality']['time_min']:.1f} min, AQI={r['route_quality']['aqi_mean']}")
 print(f"  Worth it: {r['worth_it']} — {r['worth_it_reason']}")
-print(f"  Forecast: +1h={r['forecast_1h']}, +3h={r['forecast_3h']}, +7d={r['forecast_1w']}")
 
 # 4. Mock data — Empty
 print("\n--- Mock Route (Empty) ---")

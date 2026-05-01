@@ -16,6 +16,18 @@ class LuchtmeetnetClient(AQIAPIClient):
     """Client for the Dutch Luchtmeetnet API."""
     BASE_URL = "https://api.luchtmeetnet.nl/open_api"
 
+    def __init__(self):
+        super().__init__()
+        self.station_coords = self._load_station_coords()
+
+    def _load_station_coords(self):
+        try:
+            with open('data/luchtmeetnet_stations.json', 'r') as f:
+                import json
+                return json.load(f)
+        except Exception:
+            return {}
+
     def get_measurements(self) -> List[Dict]:
         # Simple implementation fetching latest measurements for Amsterdam area
         # Note: In a production system, we'd filter by bbox or coordinates.
@@ -26,13 +38,15 @@ class LuchtmeetnetClient(AQIAPIClient):
                 # Normalize data format
                 normalized = []
                 for item in data:
+                    station_num = item.get('station_number')
+                    coords = self.station_coords.get(station_num, {})
                     normalized.append({
-                        "station": item.get('station_number'),
+                        "station": station_num,
                         "value": item.get('value'),
                         "formula": item.get('formula'),
                         "timestamp": item.get('timestamp_measured'),
-                        "lat": item.get('coordinates', {}).get('lat'),
-                        "lon": item.get('coordinates', {}).get('lng')
+                        "lat": coords.get('lat'),
+                        "lon": coords.get('lon')
                     })
                 return normalized
             return []

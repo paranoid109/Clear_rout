@@ -83,7 +83,8 @@ class ScenarioSelector:
         return random.choices(failure_types, weights=weights, k=1)[0]
     
     def get_response_data(self, scenario: str, endpoint: str, 
-                          mode: str = "car", city: str = "bengaluru") -> Tuple[int, Any]:
+                          mode: str = "car", city: str = "bengaluru",
+                          coords: Optional[Dict] = None) -> Tuple[int, Any]:
         """
         Generate the appropriate response data for the selected scenario.
         
@@ -92,7 +93,7 @@ class ScenarioSelector:
             For error scenarios, response_body is a dict with "detail" key.
         """
         if endpoint == "/route":
-            return self._get_route_response(scenario, mode, city)
+            return self._get_route_response(scenario, mode, city, coords)
         elif endpoint == "/stats":
             return self._get_stats_response(scenario, city)
         elif endpoint == "/health":
@@ -101,10 +102,11 @@ class ScenarioSelector:
             # Unknown endpoint — pass through
             return (200, None)
     
-    def _get_route_response(self, scenario: str, mode: str, city: str) -> Tuple[int, Any]:
+    def _get_route_response(self, scenario: str, mode: str, city: str, 
+                            coords: Optional[Dict] = None) -> Tuple[int, Any]:
         """Generate route endpoint response for a given scenario."""
         if scenario == SUCCESS:
-            return (200, mock_data.generate_route_success(mode, city))
+            return (200, mock_data.generate_route_success(mode, city, coords))
         
         elif scenario == API_ERROR:
             detail = mock_data.generate_error_detail()
@@ -115,7 +117,7 @@ class ScenarioSelector:
             # After the delay, return either success or a timeout error.
             if random.random() > 0.5:
                 # Sometimes timeouts still return data (slow response)
-                return (200, mock_data.generate_route_success(mode, city))
+                return (200, mock_data.generate_route_success(mode, city, coords))
             else:
                 return (504, {"detail": "Demo Mode: Simulated Gateway Timeout — upstream routing engine did not respond within deadline"})
         
@@ -127,7 +129,7 @@ class ScenarioSelector:
             return (200, mock_data.generate_empty_route_response(mode))
         
         elif scenario == PARTIAL_DATA:
-            return (200, mock_data.generate_partial_route_response(mode, city))
+            return (200, mock_data.generate_partial_route_response(mode, city, coords))
         
         # Fallback
         return (200, mock_data.generate_route_success(mode, city))

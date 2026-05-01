@@ -40,9 +40,32 @@ _ROAD_PATHS = {
 }
 
 
-def _rand_coords(city: str = "bengaluru") -> List[List[float]]:
+def _rand_grid_path(start_lat: float, start_lon: float, end_lat: float, end_lon: float) -> List[List[float]]:
+    """
+    Generate an L-shaped path between two points for simpler mock rendering.
+    """
+    path = [[start_lat, start_lon]]
+    
+    # Randomly pick whether to go horizontal or vertical first
+    if random.random() > 0.5:
+        path.append([start_lat, end_lon])
+    else:
+        path.append([end_lat, start_lon])
+
+    path.append([end_lat, end_lon])
+    return path
+
+
+def _rand_coords(city: str = "bengaluru", coords: Optional[Dict] = None) -> List[List[float]]:
     """Generate a realistic, road-aligned polyline path for the given city."""
-    # Pick a random skeleton path for the city
+    # Use user-provided coordinates if available for grid-aligned routing
+    if coords and all(k in coords for k in ["start_lat", "start_lon", "end_lat", "end_lon"]):
+        return _rand_grid_path(
+            coords["start_lat"], coords["start_lon"], 
+            coords["end_lat"], coords["end_lon"]
+        )
+    
+    # Fallback to predefined skeletons if no coordinates provided
     skeletons = _ROAD_PATHS.get(city.lower(), _ROAD_PATHS["bengaluru"])
     skeleton = random.choice(skeletons)
     
@@ -58,7 +81,7 @@ def _rand_coords(city: str = "bengaluru") -> List[List[float]]:
     return path
 
 
-def _rand_route(city: str = "bengaluru", bias: str = "neutral") -> Dict:
+def _rand_route(city: str = "bengaluru", bias: str = "neutral", coords: Optional[Dict] = None, override_path: Optional[List[List[float]]] = None) -> Dict:
     """
     Generate a single route result with realistic metrics.
     
@@ -83,7 +106,7 @@ def _rand_route(city: str = "bengaluru", bias: str = "neutral") -> Dict:
     exposure = round(aqi_mean * time_min, 1)
     pm25 = round(random.uniform(2, 50), 2)
     
-    path = _rand_coords(city)
+    path = override_path if override_path else _rand_coords(city, coords)
     
     return {
         "route": list(range(len(path))),
@@ -98,10 +121,11 @@ def _rand_route(city: str = "bengaluru", bias: str = "neutral") -> Dict:
     }
 
 
-def generate_route_success(mode: str = "car", city: str = "bengaluru") -> Dict:
+def generate_route_success(mode: str = "car", city: str = "bengaluru", coords: Optional[Dict] = None) -> Dict:
     """Generate a complete, realistic success response for /route."""
-    fastest = _rand_route(city, bias="fast")
-    cleanest = _rand_route(city, bias="clean")
+    shared_path = _rand_coords(city, coords)
+    fastest = _rand_route(city, bias="fast", coords=coords, override_path=shared_path)
+    cleanest = _rand_route(city, bias="clean", coords=coords, override_path=shared_path)
     
     pm25_diff = fastest["pm25_inhaled_ug"] - cleanest["pm25_inhaled_ug"]
     cigs = pm25_diff / 22.0
@@ -199,12 +223,12 @@ def generate_empty_stats_response(city: str = "bengaluru") -> Dict:
     }
 
 
-def generate_partial_route_response(mode: str = "car", city: str = "bengaluru") -> Dict:
+def generate_partial_route_response(mode: str = "car", city: str = "bengaluru", coords: Optional[Dict] = None) -> Dict:
     """
     Generate a response with some fields missing or incomplete.
     Simulates real-world partial data scenarios.
     """
-    response = generate_route_success(mode, city)
+    response = generate_route_success(mode, city, coords)
     
     # Randomly remove optional fields
     partial_choices = [

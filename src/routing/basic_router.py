@@ -124,53 +124,19 @@ class AirRouter:
         """
         Finds the shortest route. Falls back to a straight line if graph is empty or disconnected.
         """
-        try:
-            if len(self.G.nodes) == 0:
-                raise ValueError("Graph is empty (possibly due to MemoryError)")
-                
-            orig_node, dist_orig = ox.distance.nearest_nodes(self.G, X=start_coords[1], Y=start_coords[0], return_dist=True)
-            dest_node, dist_dest = ox.distance.nearest_nodes(self.G, X=end_coords[1], Y=end_coords[0], return_dist=True)
+        if len(self.G.nodes) == 0:
+            raise ValueError("Graph is empty (possibly due to MemoryError)")
             
-            # If distance is > 10km (approx 0.1 degrees), it's grossly out of bounds
-            if dist_orig > 10000 or dist_dest > 10000:
-                raise ValueError("Point is too far from city center/graph coverage.")
+        orig_node, dist_orig = ox.distance.nearest_nodes(self.G, X=start_coords[1], Y=start_coords[0], return_dist=True)
+        dest_node, dist_dest = ox.distance.nearest_nodes(self.G, X=end_coords[1], Y=end_coords[0], return_dist=True)
+        
+        # If distance is > 10km (approx 0.1 degrees), it's grossly out of bounds
+        if dist_orig > 10000 or dist_dest > 10000:
+            raise ValueError("Point is too far from city center/graph coverage.")
 
-            route = nx.shortest_path(self.G, orig_node, dest_node, weight=weight)
-            if len(route) < 2:
-                raise ValueError("Route too short")
-                
-        except (ValueError, nx.NetworkXNoPath) as e:
-            print(f"Routing fallback used: {e}")
-            # Approximate fallback straight line route
-            import math
-            def haversine(lat1, lon1, lat2, lon2):
-                r = 6371
-                phi1, phi2 = math.radians(lat1), math.radians(lat2)
-                dphi = math.radians(lat2 - lat1)
-                dlambda = math.radians(lon2 - lon1)
-                a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
-                return 2 * r * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-            
-            dist_km = haversine(start_coords[0], start_coords[1], end_coords[0], end_coords[1])
-            speed_kmh = 15.0 if self.current_mode == "bike" else (5.0 if self.current_mode == "walk" else 40.0)
-            time_min = (dist_km / speed_kmh) * 60.0
-            avg_aqi = 50.0
-            
-            ve = self.ventilation_model.predict_ve(self.current_mode, speed_kmh, 0.0)
-            pm25_ug = self.ventilation_model.calculate_pm25_inhaled(avg_aqi, ve, time_min)
-            
-            return {
-                "route": [0, 1],
-                "distance_km": dist_km,
-                "time_min": time_min,
-                "aqi_mean": avg_aqi,
-                "exposure_index": avg_aqi * time_min,
-                "pm25_inhaled_ug": pm25_ug,
-                "nodes": [0, 1],
-                "path": [list(start_coords), list(end_coords)],
-                "is_fallback": True,
-                "error_message": str(e)
-            }
+        route = nx.shortest_path(self.G, orig_node, dest_node, weight=weight)
+        if len(route) < 2:
+            raise ValueError("Route too short")
 
         route_gdf = ox.routing.route_to_gdf(self.G, route)
         
